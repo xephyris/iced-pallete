@@ -1,8 +1,9 @@
 use std::f32::consts::PI;
 
-use iced::{Element, Task, widget::{Column, text}};
+use iced::{Element, Length, Task, widget::{Canvas, Column, canvas, text}};
 
 mod colors;
+mod canvas_elements; 
 
 #[derive(Default, Debug, Copy, Clone)]
 struct IcedPallete {
@@ -18,10 +19,18 @@ impl IcedPallete {
     fn view(&self) -> Element<Message> {
         Column::new()
             .push(
-            text("Iced"))
+            text("Iced")
+            )
             // .push(
             // iced::widget::canvas::gradient::Linear::new(0.0, (2*PI))
             // )
+            .push(
+                Canvas::new(
+                    canvas_elements::ColorWheel{
+                        radius: 512.0 
+                    }
+                ).width(1024_u32).height(1024_u32)
+            )
         .into()
     }
 
@@ -36,3 +45,4 @@ fn main() -> iced::Result {
     // iced 0.14.0 boot is now init parameters not name
     iced::application(IcedPallete::default, IcedPallete::update, IcedPallete::view).run()
 }
+
