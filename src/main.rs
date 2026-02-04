@@ -27,7 +27,7 @@ impl IcedPallete {
             .push(
                 Canvas::new(
                     canvas_elements::ColorWheel{
-                        radius: 512.0 
+                        radius: 256.0 
                     }
                 ).width(1024_u32).height(1024_u32)
             )

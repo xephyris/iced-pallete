@@ -1155,6 +1155,7 @@ dependencies = [
  "iced",
  "iced_core",
  "iced_graphics",
+ "iced_widget",
 ]
 
 [[package]]
