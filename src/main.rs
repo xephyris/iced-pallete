@@ -1,22 +1,22 @@
-use std::f32::consts::PI;
+use iced::{Element, widget::{Column, text}};
 
-use iced::{Element, Length, Task, widget::{Canvas, Column, canvas, text}};
+use crate::colors::HSV;
 
 mod colors;
 mod canvas_elements; 
 
 #[derive(Default, Debug, Copy, Clone)]
 struct IcedPallete {
-    
+
 }
 
 impl IcedPallete {
     
-    fn update(&mut self, message: Message) {
+    fn update(&mut self, _message: Message) {
 
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         Column::new()
             .push(
             text("Iced")
@@ -25,20 +25,23 @@ impl IcedPallete {
             // iced::widget::canvas::gradient::Linear::new(0.0, (2*PI))
             // )
             .push(
-                Canvas::new(
-                    canvas_elements::ColorWheel{
-                        radius: 256.0 
-                    }
-                ).width(1024_u32).height(1024_u32)
+                canvas_elements::ColorWheel::new(50.0, Message::Some),
+                // Canvas::new(
+                //     canvas_elements::ColorWheel{
+                //         radius: 256.0, 
+                //         selected_color: None,
+                //     }
+                // ).width(1024_u32).height(1024_u32)
             )
         .into()
     }
 
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone, Copy)]
 enum Message {
-
+    Some(HSV),
+    _None
 }
 
 fn main() -> iced::Result {

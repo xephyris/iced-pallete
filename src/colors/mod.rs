@@ -1,3 +1,5 @@
+
+#[derive(Default, Debug, Copy, Clone)]
 pub struct HSV {
     pub hue: f32,
     pub saturation: f32,
