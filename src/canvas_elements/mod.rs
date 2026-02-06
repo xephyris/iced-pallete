@@ -54,6 +54,23 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
         tree::State::new(State::<Renderer>::default())
     }
 
+    fn mouse_interaction(
+            &self,
+            _tree: &Tree,
+            layout: layout::Layout<'_>,
+            cursor: mouse::Cursor,
+            _viewport: &Rectangle,
+            _renderer: &Renderer,
+        ) -> mouse::Interaction {
+        if let Some(position) = cursor.position_from(layout.bounds().center()) {
+            // dbg!(f32::sqrt(position.x.powi(2) + position.y.powi(2)));
+            if f32::sqrt(position.x.powi(2) + position.y.powi(2)) < self.radius {
+                return mouse::Interaction::Crosshair;
+            }
+        }
+        Default::default()
+    }
+
     fn draw(
         &self,
         tree: &Tree,
@@ -74,7 +91,7 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
         renderer.with_layer(bounds, |renderer| {
             let color_wheel = wheel_cache.draw(renderer, size, |frame| {
                 let size = self.radius * 2.0;
-                let center = (frame.center().x, frame.center().y);
+                let center = (layout.bounds().center().x, layout.bounds().center().y);
                 let start_x = center.0 - self.radius;
                 let start_y = center.1 - self.radius;
                 
@@ -121,7 +138,7 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
                 // Circle around to make image look less jagged
                 // Canvas doesn't do anti-aliasing for direct pixel manipulation
 
-                let center = frame.center();
+                let center = layout.bounds().center();
 
                 let line_width = (5.0 * self.radius / 512.0).clamp(1.0, 5.0);
 
