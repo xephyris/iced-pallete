@@ -4,14 +4,14 @@ use iced_core::widget::{Tree, Widget, tree};
 use iced_core::{Color, Element, Length, Point, Rectangle, Size, layout, mouse};
 use iced_graphics::geometry::{self, LineCap, Path, Stroke};
 
-use crate::colors::{HSV, hsv_to_rgb};
+use crate::colors::{HSV, hsv_to_rgb, position_to_hsv};
 pub struct ColorWheel<'a, Message>
 {
     radius: f32,
     width: Length,
     height: Length,
-    _selected_color: Option<Selector>,
-    _on_select: Box<dyn Fn(HSV) -> Message + 'a>,
+    selected_color: Option<Selector>,
+    on_select: Box<dyn Fn(HSV) -> Message + 'a>,
 
 }
 
@@ -21,8 +21,8 @@ impl<'a, Message> ColorWheel<'a, Message> {
             radius, 
             width: Length::Fill, 
             height: Length::Fill, 
-            _selected_color: None, 
-            _on_select: Box::new(on_select),
+            selected_color: None, 
+            on_select: Box::new(on_select),
         }
     }
 }
@@ -155,6 +155,40 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
             });
             renderer.draw_geometry(color_wheel);
         })
+    }
+
+    fn update(
+            &mut self,
+            tree: &mut Tree,
+            event: &iced::Event,
+            layout: layout::Layout<'_>,
+            cursor: mouse::Cursor,
+            _renderer: &Renderer,
+            _clipboard: &mut dyn iced_core::Clipboard,
+            shell: &mut iced_core::Shell<'_, Message>,
+            _viewport: &Rectangle,
+        ) {
+        let State {
+            wheel_cache
+        }: &mut State<Renderer> = tree.state.downcast_mut();
+
+        match event {
+            iced_core::Event::Mouse(mouse_event) => {
+                match mouse_event {
+                    mouse::Event::ButtonPressed(_button) => {
+                        if let Some(cursor) = cursor.position_from(layout.bounds().center()) {
+                            let color = position_to_hsv(cursor.x, cursor.y, self.radius);
+                            shell.publish((self.on_select)(color));
+                        } else {
+                            ()
+                        }
+                    }
+                    _ => ()
+                }
+            }
+            _ => ()
+        }
+
     }
 }
 

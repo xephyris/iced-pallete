@@ -6,6 +6,28 @@ pub struct HSV {
     pub value: f32,
 }
 
+impl HSV {
+    pub fn new(h: f32, s: f32, v: f32) -> Self {
+        HSV {
+            hue: h,
+            saturation: s,
+            value: v,
+        }
+    }
+
+    pub fn to_rgb(&self) -> (f32, f32, f32) {
+        hsv_to_rgb(self.hue, self.saturation, self.value)
+    }
+
+    pub fn to_rgb_u8(&self) -> (u8, u8, u8) {
+        let (r, g, b) = self.to_rgb();
+
+        (u8::clamp((r * 255.0) as u8, 0, 255),
+        u8::clamp((g * 255.0) as u8, 0, 255),
+        u8::clamp((b * 255.0) as u8, 0, 255))
+    }
+}
+
 pub fn hsv_to_rgb(hue: f32, saturation: f32, value: f32) -> (f32, f32, f32) {
     // https://cs.stackexchange.com/questions/64549/convert-hsv-to-rgb-colors
     // https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
@@ -55,4 +77,27 @@ pub fn hsv_to_rgb(hue: f32, saturation: f32, value: f32) -> (f32, f32, f32) {
 
     (r, g, b)
 
+}
+
+pub fn position_to_hsv(rel_x: f32, rel_y: f32, radius: f32) -> HSV {
+    let distance = f32::sqrt(rel_x.powi(2) + rel_y.powi(2));
+    let mut angle = f32::atan2(rel_y, rel_x);
+    // if angle < 0.0 {
+    //         angle += 360.0;
+    //     }
+    //     if angle < 90.0 {
+    //         angle += 270.0;
+    //     } else {
+    //         angle -= 90.0;
+    //     }
+
+    let s = (distance / radius).clamp(0.0, 1.0);
+    let h = angle;
+    let v = 1.0;
+
+    HSV {
+        hue: h,
+        saturation: s,
+        value: v
+    }
 }

@@ -1,4 +1,5 @@
-use iced::{Element, widget::{Column, text}};
+use iced::{Background, Color, Element, Theme, widget::{Column, button, text}};
+use iced_widget::Row;
 
 use crate::colors::HSV;
 
@@ -7,25 +8,62 @@ mod canvas_elements;
 
 #[derive(Default, Debug, Copy, Clone)]
 struct IcedPallete {
-
+    current_color: HSV,
 }
 
 impl IcedPallete {
     
-    fn update(&mut self, _message: Message) {
-
+    fn update(&mut self, message: Message) {
+        match message {
+            Message::ColorUpdated(hsv) => {
+                self.current_color = hsv
+            },
+            Message::_None => {},
+        }
     }
 
     fn view(&self) -> Element<'_, Message> {
+        let color = self.current_color.to_rgb_u8();
+        let color_f32 = self.current_color.to_rgb();
         Column::new()
             .push(
             text("Iced")
             )
-            // .push(
-            // iced::widget::canvas::gradient::Linear::new(0.0, (2*PI))
-            // )
             .push(
-                canvas_elements::ColorWheel::new(50.0, Message::Some),
+                text(format!("Current Color: {} {} {}", color.0, color.1, color.2))
+            )
+            .push(Row::new()
+                .push(
+                    button("     ").style(
+                        move |_: &Theme, _status| {
+                            button::Style { 
+                                background: Some(Background::Color(Color::from_rgb(color_f32.0, color_f32.1, color_f32.2))), 
+                                text_color: Color::from_rgb(color_f32.0, color_f32.1, color_f32.2), 
+                                border: iced::Border::default().color(Color::from_rgb(color_f32.0, color_f32.1, color_f32.2)), 
+                                snap: true,
+                                ..Default::default()
+                            }
+                        })
+                        .width(iced::Length::Fixed(100.0))
+                        .height(iced::Length::Fixed(100.0))
+                ).push(
+                    button("     ").style(
+                        move |_: &Theme, _status| {
+                            button::Style { 
+                                background: Some(Background::Color(Color::from_rgb(color_f32.0, color_f32.1, color_f32.2))), 
+                                text_color: Color::from_rgb(color_f32.0, color_f32.1, color_f32.2), 
+                                border: iced::Border::default().color(Color::from_rgb(color_f32.0, color_f32.1, color_f32.2)), 
+                                snap: true,
+                                ..Default::default()
+                            }
+                        })
+                        .width(iced::Length::Fixed(100.0))
+                        .height(iced::Length::Fixed(100.0))
+                )
+
+            )
+            .push(
+                canvas_elements::ColorWheel::new(50.0, Message::ColorUpdated),
                 // Canvas::new(
                 //     canvas_elements::ColorWheel{
                 //         radius: 256.0, 
@@ -40,7 +78,7 @@ impl IcedPallete {
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
-    Some(HSV),
+    ColorUpdated(HSV),
     _None
 }
 
