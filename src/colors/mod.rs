@@ -81,15 +81,15 @@ pub fn hsv_to_rgb(hue: f32, saturation: f32, value: f32) -> (f32, f32, f32) {
 
 pub fn position_to_hsv(rel_x: f32, rel_y: f32, radius: f32) -> HSV {
     let distance = f32::sqrt(rel_x.powi(2) + rel_y.powi(2));
-    let mut angle = f32::atan2(rel_y, rel_x);
-    // if angle < 0.0 {
-    //         angle += 360.0;
-    //     }
-    //     if angle < 90.0 {
-    //         angle += 270.0;
-    //     } else {
-    //         angle -= 90.0;
-    //     }
+    let mut angle = f32::atan2(rel_y, rel_x).to_degrees();
+    if angle < 0.0 {
+        angle += 360.0;
+    }
+    if angle < 90.0 {
+        angle += 270.0;
+    } else {
+        angle -= 90.0;
+    }
 
     let s = (distance / radius).clamp(0.0, 1.0);
     let h = angle;

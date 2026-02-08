@@ -135,6 +135,12 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
                     }
                 }
 
+                // frame.fill_rectangle(
+                //     Point::new(center.0 - self.radius / 10.0, center.1 - self.radius / 10.0),
+                //     Size::new(self.radius / 5.0, self.radius / 5.0),
+                //     Color::from_rgb(0.0, 0.0, 0.0),
+                // );
+
                 // Circle around to make image look less jagged
                 // Canvas doesn't do anti-aliasing for direct pixel manipulation
 
@@ -177,8 +183,12 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
                 match mouse_event {
                     mouse::Event::ButtonPressed(_button) => {
                         if let Some(cursor) = cursor.position_from(layout.bounds().center()) {
-                            let color = position_to_hsv(cursor.x, cursor.y, self.radius);
-                            shell.publish((self.on_select)(color));
+                            if dist_from(cursor.x, cursor.y, 0.0, 0.0) < self.radius {
+                                let color = position_to_hsv(cursor.x, cursor.y, self.radius);
+                                shell.publish((self.on_select)(color));
+                            } else {
+                                ()
+                            }
                         } else {
                             ()
                         }

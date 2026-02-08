@@ -30,7 +30,15 @@ impl IcedPallete {
             text("Iced")
             )
             .push(
-                text(format!("Current Color: {} {} {}", color.0, color.1, color.2))
+                text(format!("Current Color: R: {} G: {} B: {}", color.0, color.1, color.2))
+            )
+            .push(
+                text(format!("HEX: #{:02X}{:02X}{:02X}", color.0, color.1, color.2))
+            )
+            .push(text(format!("HSV: H: {} S: {} V: {}", 
+                (self.current_color.hue / 360.0 * 100.0).round() / 100.0, 
+                (self.current_color.saturation * 100.0).round() / 100.0, 
+                (self.current_color.value * 100.0).round() / 100.0))
             )
             .push(Row::new()
                 .push(
