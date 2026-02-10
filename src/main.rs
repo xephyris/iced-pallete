@@ -71,7 +71,7 @@ impl IcedPallete {
 
             )
             .push(
-                canvas_elements::ColorWheel::new(50.0, Message::ColorUpdated),
+                canvas_elements::ColorWheel::new(256.0, Message::ColorUpdated),
                 // Canvas::new(
                 //     canvas_elements::ColorWheel{
                 //         radius: 256.0, 
