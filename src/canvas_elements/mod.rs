@@ -5,6 +5,7 @@ use iced_core::{Color, Element, Length, Point, Rectangle, Size, layout, mouse};
 use iced_graphics::geometry::{self, Frame, LineCap, Path, Stroke};
 
 use crate::colors::{HSV, hsv_to_rgb, position_to_hsv};
+
 pub struct ColorWheel<'a, Message>
 {
     radius: f32,
@@ -84,6 +85,7 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
         let State {
             wheel_cache,
             selector_cache,
+            selected_color
         }: &State<Renderer> = tree.state.downcast_ref();
 
         let bounds = layout.bounds();
@@ -158,15 +160,15 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
                     ..Default::default()
                 };
 
-                
-
                 frame.stroke(&circle, stroke);
             });
-            dbg!("Drawing Selector {}", &self.selected_color);
+           
             let selector = selector_cache.draw(renderer, size, |frame| {
-                if let Some(selector) = &self.selected_color {
+                if let Some(selector) = selected_color {
                     selector.draw(frame, theme);
+                    dbg!("Drawing Selector {}", &selected_color);
                 }
+
             });
             renderer.draw_geometry(color_wheel);
             renderer.draw_geometry(selector);
@@ -187,18 +189,22 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
         let State {
             wheel_cache,
             selector_cache,
+            selected_color,
         }: &mut State<Renderer> = tree.state.downcast_mut();
 
         match event {
             iced_core::Event::Mouse(mouse_event) => {
                 match mouse_event {
                     mouse::Event::ButtonPressed(_button) => {
-                        if let Some(cursor) = cursor.position_from(layout.bounds().center()) {
-                            if dist_from(cursor.x, cursor.y, 0.0, 0.0) < self.radius {
-                                let color = position_to_hsv(cursor.x, cursor.y, self.radius);
-                                self.selected_color.replace(Selector::new(cursor.x, cursor.y, 2.0, color));
-                                dbg!("Updating Drawing Selector {}", &self.selected_color);
+                        if let Some(cursor_rel) = cursor.position_from(layout.bounds().center()) {
+                            if dist_from(cursor_rel.x, cursor_rel.y, 0.0, 0.0) < self.radius {
+                                let color = position_to_hsv(cursor_rel.x, cursor_rel.y, self.radius);
+                                if let Some(cursor) = cursor.position() {
+                                    selected_color.replace(Selector::new(cursor.x, cursor.y, 30.0, color));
+                                }
+                                dbg!("Updating Drawing Selector {}", &selected_color);
                                 selector_cache.clear();
+                                wheel_cache.clear();
                                 let _ = shell.redraw_request();
                                 shell.publish((self.on_select)(color));
                             } else {
@@ -233,6 +239,7 @@ impl <'a, Message, Theme, Renderer> From<ColorWheel<'a, Message>>
 pub struct State<Renderer: geometry::Renderer> {
     wheel_cache: geometry::Cache<Renderer>,
     selector_cache: geometry::Cache<Renderer>,
+    selected_color: Option<Selector>,
 }
 
 impl<Renderer: geometry::Renderer> Default for State<Renderer> {
@@ -240,6 +247,7 @@ impl<Renderer: geometry::Renderer> Default for State<Renderer> {
         State {
             wheel_cache: Default::default(),
             selector_cache: Default::default(),
+            selected_color: None,
         }
     }
 }
@@ -272,9 +280,9 @@ impl Selector {
         let line_width = (3.0 * self.radius / 64.0).clamp(1.0, 3.0);
 
         for col in ((self.y - self.radius) as usize)..((self.y + self.radius) as usize) {
-            for row in ((self.x - self.radius) as usize)..((self.y + self.radius) as usize) {
+            for row in ((self.x - self.radius) as usize)..((self.x + self.radius) as usize) {
                 let dist = dist_from(col as f32, row as f32, self.x, self.y);
-                if dist < self.radius {
+                // if dist < self.radius {
                     // dbg!(format!("H: {col} W: {row}, ANGLE: {angle}"));
 
                     let (r, g, b) = hsv_to_rgb(self.color.hue, self.color.saturation, self.color.value);
@@ -284,7 +292,7 @@ impl Selector {
                         Size::new(1.0, 1.0),
                         Color::from_rgb(r, g, b),
                     );
-                }
+                // }
             }
         }
 
