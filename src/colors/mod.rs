@@ -94,10 +94,33 @@ pub fn position_to_hsv(rel_x: f32, rel_y: f32, radius: f32) -> HSV {
     let s = (distance / radius).clamp(0.0, 1.0);
     let h = angle;
     let v = 1.0;
-
+    dbg!("ANGLE RECIEVED", angle, distance);
     HSV {
         hue: h,
         saturation: s,
         value: v
     }
+}
+
+pub fn hsv_to_position(hsv: HSV, radius: f32, center: (f32, f32)) -> (f32, f32) {
+    let dist = hsv.saturation * radius;
+    
+    let mut angle = hsv.hue;
+    
+    if angle >= 270.0 {
+        angle -= 270.0;
+    } else {
+        angle += 90.0;
+    }
+    if angle >= 360.0 {
+        angle -= 360.0;
+    }
+
+    dbg!("ANGLE COMPUTED", angle, dist);
+
+    let x = center.0 + dist * f32::cos(angle.to_radians());
+    let y = center.1 + dist * f32::sin(angle.to_radians());
+    dbg!(x, y);
+    dbg!(center);
+    (x, y)
 }

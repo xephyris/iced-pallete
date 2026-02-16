@@ -1,10 +1,10 @@
 // use iced::{Point, Size, mouse};
 // use iced::{Color, Rectangle, Renderer, Theme};
 use iced_core::widget::{Tree, Widget, tree};
-use iced_core::{Color, Element, Length, Point, Rectangle, Size, layout, mouse};
+use iced_core::{Color, Element, Length, Point, Rectangle, Size, layout, mouse, window};
 use iced_graphics::geometry::{self, Frame, LineCap, Path, Stroke};
 
-use crate::colors::{HSV, hsv_to_rgb, position_to_hsv};
+use crate::colors::{HSV, hsv_to_position, hsv_to_rgb, position_to_hsv};
 
 pub struct ColorWheel<'a, Message>
 {
@@ -165,7 +165,8 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
            
             let selector = selector_cache.draw(renderer, size, |frame| {
                 if let Some(selector) = selected_color {
-                    selector.draw(frame, theme);
+                    let center = hsv_to_position(selector.color, self.radius, (layout.bounds().center_x(), layout.bounds().center_y()));
+                    selector.draw(frame, theme, center);
                     dbg!("Drawing Selector {}", &selected_color);
                 }
 
@@ -200,9 +201,10 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
                             if dist_from(cursor_rel.x, cursor_rel.y, 0.0, 0.0) < self.radius {
                                 let color = position_to_hsv(cursor_rel.x, cursor_rel.y, self.radius);
                                 if let Some(cursor) = cursor.position() {
-                                    selected_color.replace(Selector::new(cursor.x, cursor.y, 30.0, color));
+                                    selected_color.replace(Selector::new(cursor.x, cursor.y, 15.0 * self.radius / 256.0, color));
                                 }
                                 dbg!("Updating Drawing Selector {}", &selected_color);
+                                dbg!(layout.bounds().center());
                                 selector_cache.clear();
                                 wheel_cache.clear();
                                 let _ = shell.redraw_request();
@@ -215,6 +217,21 @@ impl<'a, Message, Theme, Renderer> Widget<Message, Theme, Renderer>
                         }
                     }
                     _ => ()
+                }
+            }
+            iced::Event::Window(win_event) => {
+                match win_event {
+                    window::Event::Resized(resize) => {
+                        if let Some(color) = &selected_color {
+                            let (x, y) = hsv_to_position(color.color, self.radius, (resize.width / 2.0, resize.height / 2.0));
+                            dbg!(layout.bounds().size());
+                            selected_color.replace(Selector::new(x, y, 15.0 * self.radius / 256.0, color.color));
+                            selector_cache.clear();
+                            dbg!("NEW X", x, "NEW Y", y);
+                            let _ = shell.request_redraw();
+                        }
+                    }
+                    _ => {}
                 }
             }
             _ => ()
@@ -275,24 +292,22 @@ impl Selector {
         Selector { x, y, radius, color: hsv }
     }
 
-    pub fn draw<Renderer: geometry::Renderer>(&self, frame: &mut Frame<Renderer>, theme: &impl iced_core::theme::Base) {
-        let circle = Path::circle(Point{x: self.x, y: self.y}, self.radius);
-        let line_width = (3.0 * self.radius / 64.0).clamp(1.0, 3.0);
-
-        for col in ((self.y - self.radius) as usize)..((self.y + self.radius) as usize) {
-            for row in ((self.x - self.radius) as usize)..((self.x + self.radius) as usize) {
-                let dist = dist_from(col as f32, row as f32, self.x, self.y);
-                // if dist < self.radius {
+    pub fn draw<Renderer: geometry::Renderer>(&self, frame: &mut Frame<Renderer>, theme: &impl iced_core::theme::Base, center: (f32, f32)) {
+        let circle = Path::circle(Point{x: center.0, y: center.1}, self.radius);
+        let line_width = (3.0 * self.radius / 64.0).clamp(2.0, 4.0);
+        // dbg!("START COL {} END COL {} START ROW {} END ROW {}", self.y - self.radius, self.y + self.radius, self.x - self.radius, self.x + self.radius);
+        for col in ((center.1 - self.radius) as usize)..((center.1 + self.radius) as usize) {
+            for row in ((center.0 - self.radius) as usize)..((center.0 + self.radius) as usize) {
+                let dist = dist_from(row as f32, col as f32, center.0 , center.1);
+                if dist < self.radius {
                     // dbg!(format!("H: {col} W: {row}, ANGLE: {angle}"));
-
                     let (r, g, b) = hsv_to_rgb(self.color.hue, self.color.saturation, self.color.value);
-
-                    frame.fill_rectangle(
-                        Point::new(row as f32, col as f32),
-                        Size::new(1.0, 1.0),
-                        Color::from_rgb(r, g, b),
-                    );
-                // }
+                        frame.fill_rectangle(
+                            Point::new(row as f32, col as f32),
+                            Size::new(1.0, 1.0),
+                            Color::from_rgb(r, g, b),
+                        );
+                }
             }
         }
 
